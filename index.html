@@ -32,6 +32,38 @@
             pointer-events: none;
         }
 
+        /* Minimalist, Melodious Countdown Timer Overlay */
+        #timer-container {
+            position: absolute;
+            z-index: 4;
+            text-align: center;
+            transition: opacity 1.5s cubic-bezier(0.25, 1, 0.5, 1), transform 1.5s ease;
+        }
+
+        #timer-container.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0.95);
+        }
+
+        .timer-title {
+            font-size: 1.1rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #a78bfa;
+            margin-bottom: 16px;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        #countdown {
+            font-size: 3rem;
+            font-weight: 300;
+            letter-spacing: 4px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(167, 139, 250, 0.4);
+        }
+
         /* Cosmic Card with a Melodious, Pulsing Breathing Effect */
         .card {
             position: relative;
@@ -44,8 +76,25 @@
             max-width: 400px;
             width: 90%;
             
-            /* Gentle fade-in on load and infinite slow pulse */
-            animation: fadeIn 2.5s ease-out forwards, cardPulse 8s ease-in-out infinite alternate;
+            /* Hidden state features initially */
+            opacity: 0;
+            filter: blur(20px);
+            transform: scale(0.95);
+            pointer-events: none;
+            
+            /* Smooth unfolding transition triggered by JS */
+            transition: opacity 2.5s cubic-bezier(0.25, 1, 0.5, 1), 
+                        filter 2.5s cubic-bezier(0.25, 1, 0.5, 1), 
+                        transform 2.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* Revealed class added by JS at midnight */
+        .card.revealed {
+            opacity: 1;
+            filter: blur(0px);
+            transform: scale(1);
+            pointer-events: auto;
+            animation: cardPulse 8s ease-in-out infinite alternate;
         }
 
         /* Soft Lavender Cover Art Bracket */
@@ -126,17 +175,6 @@
         }
 
         /* --- Slow Transitions & Keyframes --- */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(15px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         @keyframes cardPulse {
             0% {
                 box-shadow: 0 0 30px rgba(147, 51, 234, 0.1);
@@ -154,8 +192,14 @@
     <!-- HTML5 Canvas for Slow JS Twinkling Stars -->
     <canvas id="starfield"></canvas>
 
+    <!-- Countdown Timer Interface -->
+    <div id="timer-container">
+        <div class="timer-title">Unlocking a message soon</div>
+        <div id="countdown">00:00:00</div>
+    </div>
+
     <!-- Interface Card -->
-    <div class="card">
+    <div class="card" id="birthday-card">
         <div class="cover-art">
             <!-- Circular Photo Frame Slot -->
             <div class="photo-space">
@@ -174,8 +218,47 @@
         </div>
     </div>
 
-    <!-- JavaScript for Dynamic, Decelerated Lavender Star Twinkling -->
+    <!-- JavaScript for Countdown and Dynamic, Decelerated Lavender Star Twinkling -->
     <script>
+        /* --- COUNTDOWN LOGIC --- */
+        // Target date set to exactly Midnight (00:00:00) on July 20th, 2026 IST
+        const targetDate = new Date("Jul 20, 2026 00:00:00").getTime();
+
+        const timerContainer = document.getElementById("timer-container");
+        const birthdayCard = document.getElementById("birthday-card");
+        const countdownElement = document.getElementById("countdown");
+
+        const timerInterval = setInterval(function() {
+            const now = new Date().getTime();
+            const distance = targetDate - now;
+
+            // Time math for Hours, Minutes, and Seconds
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Keep formatting clean with leading zeros
+            const displayHours = hours < 10 ? "0" + hours : hours;
+            const displayMinutes = minutes < 10 ? "0" + minutes : minutes;
+            const displaySeconds = seconds < 10 ? "0" + seconds : seconds;
+
+            countdownElement.innerHTML = `${displayHours}:${displayMinutes}:${displaySeconds}`;
+
+            // When the countdown hits zero, transition smoothly
+            if (distance < 0) {
+                clearInterval(timerInterval);
+                
+                // Fade out timer
+                timerContainer.classList.add("hidden");
+                
+                // Dissolve card in beautifully after a fraction of a second
+                setTimeout(() => {
+                    birthdayCard.classList.add("revealed");
+                }, 300);
+            }
+        }, 1000);
+
+        /* --- STARFIELD LOGIC --- */
         const canvas = document.getElementById('starfield');
         const ctx = canvas.getContext('2d');
 
